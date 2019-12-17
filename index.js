@@ -1,25 +1,36 @@
 var axios = require('axios')
 var qs = require('qs')
 
-function get(ifbConfig, req, res){
-    const query = req.query
-    const path = query.path
-    delete query.path
-  
-    const token = req.headers.authorization
-  
-    const conf = {
-      headers: {
-        'Authorization': token
-      }
+function parseQuery(req){
+  let path = ''
+
+  if (req.query.path){
+    path = req.query.path
+    delete req.query.path
+  } else if (req.params) {
+    path = req.params['0']
+  }
+
+  const token = req.headers.authorization
+
+  console.log ("===Parameters===")
+  console.log(req.query)
+  console.log("===Path::["+path+"]")
+  console.log("===Token::["+token+"]")
+
+  const conf = {
+    headers: {
+      'Authorization': token
     }
-  
-    console.log ("===Parameters===")
-    console.log(req.query)
-    console.log("===Path::["+path+"]")
-    console.log("===Token::["+token+"]")
-  
-    const encodedUrl = 'https://'+ifbConfig.servername+'.iformbuilder.com/exzact/api/'+path+'?'+qs.stringify(query)
+  }
+
+  return {path, conf}
+}
+
+function get(ifbConfig, req, res){
+    const {path, conf} = parseQuery(req)
+
+    const encodedUrl = 'https://'+ifbConfig.servername+'.iformbuilder.com/exzact/api/'+path+'?'+qs.stringify(req.query)
   
     console.log("==Encoded URL::["+encodedUrl+"]")
   
@@ -39,27 +50,12 @@ function get(ifbConfig, req, res){
   }
 
 function _delete(ifbConfig, req, res){
-    const query = req.query
-    const path = query.path
-    delete query.path
-  
-    const token = req.headers.authorization
-  
-    const conf = {
-      headers: {
-        'Authorization': token
-      }
-    }
-  
-    console.log ("===Parameters===")
-    console.log(req.query)
-    console.log("===Path::["+path+"]")
-    console.log("===Token::["+token+"]")
-  
-    const encodedUrl = 'https://'+ifbConfig.servername+'.iformbuilder.com/exzact/api/'+path+'?'+qs.stringify(query)
-  
-    console.log("==Encoded URL::["+encodedUrl+"]")
-  
+  const {path, conf} = parseQuery(req)
+
+  const encodedUrl = 'https://'+ifbConfig.servername+'.iformbuilder.com/exzact/api/'+path+'?'+qs.stringify(req.query)
+
+  console.log("==Encoded URL::["+encodedUrl+"]")
+
     axios.delete(encodedUrl, conf)
     .then(response =>{
       const data = response.data
@@ -76,24 +72,13 @@ function _delete(ifbConfig, req, res){
   }
 
   function post(ifbConfig, req, res){
-    const body = req.body
-    const path = body.path
-    delete body.path
-  
-    const token = req.headers.authorization
-  
-    const conf = {
-      headers: {
-        'Authorization': token,
-        'Content-Type': 'application/json'
+    const {path, conf} = parseQuery(req)
 
-      }
-    }
+    conf.headers['Content-Type'] = 'application/json'
   
+    const body = req.body
     console.log ("===Body===")
     console.log(body)
-    console.log("===Path::["+path+"]")
-    console.log("===Token::["+token+"]")
   
     const encodedUrl = 'https://'+ifbConfig.servername+'.iformbuilder.com/exzact/api/'+path
   
@@ -115,29 +100,18 @@ function _delete(ifbConfig, req, res){
   }
 
   function put(ifbConfig, req, res){
-    const body = req.body
-    const path = body.path
-    delete body.path
-  
-    const token = req.headers.authorization
-  
-    const conf = {
-      headers: {
-        'Authorization': token,
-        'Content-Type': 'application/json'
+    const {path, conf} = parseQuery(req)
 
-      }
-    }
+    conf.headers['Content-Type'] = 'application/json'
   
+    const body = req.body
     console.log ("===Body===")
     console.log(body)
-    console.log("===Path::["+path+"]")
-    console.log("===Token::["+token+"]")
   
     const encodedUrl = 'https://'+ifbConfig.servername+'.iformbuilder.com/exzact/api/'+path
   
     console.log("==Encoded URL::["+encodedUrl+"]")
-  
+    
     axios.put(encodedUrl,body,conf)
     .then(response =>{
       const data = response.data

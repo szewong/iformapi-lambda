@@ -1,6 +1,6 @@
 {
   "name": "iformapi-lambda",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "iformapi helper function for pushing into lambda function",
   "main": "index.js",
   "scripts": {
