@@ -42,10 +42,17 @@ function get(ifbConfig, req, res){
       })
     })
     .catch(err=>{
-      console.log(err.response.data)
-      res.json({
-        error: err.response.data
-      })
+      if (err.response.data) {
+        console.log(err.response.data)
+        res.json({
+          error: err.response.data
+        })  
+      } else {
+        res.json({
+          error: err
+        })  
+      }
+
     })
   }
 
