@@ -1,187 +1,49 @@
-var axios = require('axios')
-var qs = require('qs')
+const APIController = require('./controller');
+const express = require('express');
 
-function parseQuery(req){
-  let path = ''
-
-  if (req.query.path){
-    path = req.query.path
-    delete req.query.path
-  } else if (req.params) {
-    path = req.params['0']
+class IformAPI{
+  constructor(config){
+    this.controller = new APIController(config);
+    this.init();
   }
 
-  const token = req.headers.authorization
+  init(){
+    let _this = this;
+    this.router = express.Router();
 
-  console.log ("===Parameters===")
-  console.log(req.query)
-  console.log("===Path::["+path+"]")
-  console.log("===Token::["+token+"]")
-
-  const conf = {
-    headers: {
-      'Authorization': token
+    const validateServerName = (req, res, next) => {
+      if(req.params.servername) next();
+      else return res.status(403).json({message: "servername is required!"});
     }
-  }
 
-  return {path, conf}
+    this.router.get('/echo', function(req, res, next){
+      res.json({result: "iformapi initiated!"});
+    });
+
+    this.router.get('/:servername/authenticate', validateServerName, (req, res, next) => {
+      _this.controller.authenticate(req, res);
+    });
+
+    this.router.post('/:servername/token', validateServerName, (req, res, next) => {
+        _this.controller.token(req, res);
+    });
+
+    this.router.get('/:servername/api/*', validateServerName, function(req, res, next){
+       _this.controller.get(req, res);
+    });
+
+    this.router.post('/:servername/api/*', validateServerName, function(req,res, next){
+      _this.controller.post(req, res);
+    });
+
+    this.router.put('/:servername/api/*', validateServerName, function(req, res, next){
+      _this.controller.put(req, res);
+    });
+
+    this.router.delete('/:servername/api/*', validateServerName, function(req, res, next){
+      _this.controller.delete(req, res);
+    });
+  }
 }
 
-function get(ifbConfig, req, res){
-    const {path, conf} = parseQuery(req)
-
-    const encodedUrl = 'https://'+ifbConfig.servername+'.iformbuilder.com/exzact/api/'+path+'?'+qs.stringify(req.query)
-  
-    console.log("==Encoded URL::["+encodedUrl+"]")
-  
-    axios.get(encodedUrl, conf)
-    .then(response =>{
-      const data = response.data
-      res.json({
-        data: data
-      })
-    })
-    .catch(err=>{
-      if (err.response.data) {
-        console.log(err.response.data)
-        res.json({
-          error: err.response.data
-        })  
-      } else {
-        res.json({
-          error: err
-        })  
-      }
-
-    })
-  }
-
-function _delete(ifbConfig, req, res){
-  const {path, conf} = parseQuery(req)
-
-  const encodedUrl = 'https://'+ifbConfig.servername+'.iformbuilder.com/exzact/api/'+path+'?'+qs.stringify(req.query)
-
-  console.log("==Encoded URL::["+encodedUrl+"]")
-
-    axios.delete(encodedUrl, conf)
-    .then(response =>{
-      const data = response.data
-      res.json({
-        data: data
-      })
-    })
-    .catch(err=>{
-      console.log(err.response.data)
-      res.json({
-        error: err.response.data
-      })
-    })
-  }
-
-  function post(ifbConfig, req, res){
-    const {path, conf} = parseQuery(req)
-
-    conf.headers['Content-Type'] = 'application/json'
-  
-    const body = req.body
-    console.log ("===Body===")
-    console.log(body)
-  
-    const encodedUrl = 'https://'+ifbConfig.servername+'.iformbuilder.com/exzact/api/'+path
-  
-    console.log("==Encoded URL::["+encodedUrl+"]")
-  
-    axios.post(encodedUrl,body,conf)
-    .then(response =>{
-      const data = response.data
-      res.json({
-        data: data
-      })
-    })
-    .catch(err=>{
-      console.log(err.response.data)
-      res.json({
-        error: err.response.data
-      })
-    })
-  }
-
-  function put(ifbConfig, req, res){
-    const {path, conf} = parseQuery(req)
-
-    conf.headers['Content-Type'] = 'application/json'
-  
-    const body = req.body
-    console.log ("===Body===")
-    console.log(body)
-  
-    const encodedUrl = 'https://'+ifbConfig.servername+'.iformbuilder.com/exzact/api/'+path
-  
-    console.log("==Encoded URL::["+encodedUrl+"]")
-    
-    axios.put(encodedUrl,body,conf)
-    .then(response =>{
-      const data = response.data
-      res.json({
-        data: data
-      })
-    })
-    .catch(err=>{
-      console.log(err.response.data)
-      res.json({
-        error: err.response.data
-      })
-    })
-  }
-
-
-  function getToken(ifbConfig, req, res){
-
-    const param = {
-      code: req.body.code,
-      access_type: 'online',
-      grant_type: 'authorization_code',
-      redirect_uri: req.body.redirect_uri
-    }
-    console.log("===Param===")
-    console.log(param)
-    const conf = {
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
-      auth: {
-        username: ifbConfig.client_id,
-        password: ifbConfig.client_secret
-      }
-    }
-    console.log("===Conf===")
-    console.log(conf)
-    const url = 'https://'+ifbConfig.servername+'.iformbuilder.com/exzact/api/oauth/token'
-  
-    console.log("==URL::["+url+"]")
-  
-    axios.post(url,qs.stringify(param), conf )
-    .then( response =>{
-      const token = response.data
-      res.json({
-        success: 'get access_token succeed!',
-        token: token
-      })
-  
-    })
-    .catch(err=>{
-      res.json({
-        error: err.data,
-        token: null
-      })
-    })
-  
-  }
-
-  module.exports = {
-      getToken: getToken,
-      get: get,
-      post: post,
-      put: put,
-      delete: _delete
-  }
+module.exports = IformAPI;
