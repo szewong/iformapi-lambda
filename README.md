@@ -20,34 +20,15 @@ npm install iformapi-lambda
 
 In app.js
 ```
-var iformapi = require('iformapi-lambda')
+var IformAPI = require('iformapi-lambda');
 
 const client_id = 'XXXXXXXXXXXXXXXXXX'
 const client_secret = 'XXXXXXXXXXXXXX'
-const servername = '<yourservername>'
 const ifbConfig = {
   client_id: client_id,
   client_secret: client_secret,
-  servername: servername
 }
 
-app.get('/api', function(req,res){
-  iformapi.get(ifbConfig, req, res)
-});
-
-app.post('/api', function(req,res){
-  iformapi.post(ifbConfig, req, res)
-});
-
-app.put('/api', function(req,res){
-  iformapi.put(ifbConfig, req, res)
-});
-
-app.delete('/api', function(req,res){
-  iformapi.delete(ifbConfig, req, res)
-});
-
-app.post('/token', function(req,res){
-  iformapi.getToken(ifbConfig, req, res)
-});
+const iformApi = new IformAPI(ifbConfig);
+app.use('/iform', iformApi.router);
 ```
